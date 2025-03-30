@@ -1,10 +1,55 @@
 // src/components/Home.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import mongoDBService from "../services/MongoDBService";
 
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if MongoDB connection is established
+    const initializeDB = async () => {
+      setLoading(true);
+      try {
+        // Initialize MongoDB connection
+        await mongoDBService.init();
+
+        // Check if user is logged in (from session storage for front-end)
+        const currentUser = sessionStorage.getItem("currentUser");
+        if (currentUser) {
+          const userData = JSON.parse(currentUser);
+          // Verify user exists in MongoDB
+          const dbUser = await mongoDBService.getUserByEmail(userData.email);
+          if (dbUser) {
+            setIsLoggedIn(true);
+            setUser(dbUser);
+            // Update session with latest user data
+            sessionStorage.setItem("currentUser", JSON.stringify(dbUser));
+          } else {
+            // User doesn't exist in DB, clear session
+            sessionStorage.removeItem("currentUser");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to initialize DB:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeDB();
+  }, []);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("currentUser");
+    setIsLoggedIn(false);
+    setUser(null);
+  };
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -20,6 +65,19 @@ const Home = () => {
       },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div
+          className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-blue-600"
+          role="status"
+        >
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -65,7 +123,7 @@ const Home = () => {
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
             <a
               href="#home"
               className="text-white hover:text-[#F2F2F2] transition-colors duration-300 font-medium"
@@ -90,12 +148,44 @@ const Home = () => {
             >
               All Events
             </Link>
-            <Link
-              to="/register"
-              className="bg-white text-[#006699] px-4 py-2 rounded-md font-semibold hover:bg-[#F2F2F2] transition-all duration-300"
-            >
-              Register
-            </Link>
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="text-white hover:text-[#F2F2F2] transition-colors duration-300 font-medium"
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-white hover:text-[#F2F2F2] transition-colors duration-300 font-medium"
+                >
+                  Logout
+                </button>
+                <Link
+                  to="/register"
+                  className="bg-white text-[#006699] px-4 py-2 rounded-md font-semibold hover:bg-[#F2F2F2] transition-all duration-300"
+                >
+                  Register
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-white hover:text-[#F2F2F2] transition-colors duration-300 font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-white text-[#006699] px-4 py-2 rounded-md font-semibold hover:bg-[#F2F2F2] transition-all duration-300"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </nav>
         </div>
 
@@ -130,12 +220,44 @@ const Home = () => {
             >
               All Events
             </Link>
-            <Link
-              to="/register"
-              className="bg-white text-[#006699] px-4 py-2 rounded-md font-semibold hover:bg-[#F2F2F2] transition-all duration-300 inline-block w-max"
-            >
-              Register
-            </Link>
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="text-white hover:text-[#F2F2F2] transition-colors duration-300 py-2 font-medium"
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-white hover:text-[#F2F2F2] transition-colors duration-300 py-2 font-medium text-left"
+                >
+                  Logout
+                </button>
+                <Link
+                  to="/register"
+                  className="bg-white text-[#006699] px-4 py-2 rounded-md font-semibold hover:bg-[#F2F2F2] transition-all duration-300 inline-block w-max"
+                >
+                  Register
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-white hover:text-[#F2F2F2] transition-colors duration-300 py-2 font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-white text-[#006699] px-4 py-2 rounded-md font-semibold hover:bg-[#F2F2F2] transition-all duration-300 inline-block w-max"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -166,12 +288,21 @@ const Home = () => {
               >
                 Explore Events
               </a>
-              <Link
-                to="/register"
-                className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-md font-semibold hover:bg-white hover:text-[#006699] transition-all duration-300 shadow-lg"
-              >
-                Become a Member
-              </Link>
+              {isLoggedIn ? (
+                <Link
+                  to="/profile"
+                  className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-md font-semibold hover:bg-white hover:text-[#006699] transition-all duration-300 shadow-lg"
+                >
+                  My Profile
+                </Link>
+              ) : (
+                <Link
+                  to="/signup"
+                  className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-md font-semibold hover:bg-white hover:text-[#006699] transition-all duration-300 shadow-lg"
+                >
+                  Become a Member
+                </Link>
+              )}
             </div>
           </motion.div>
           <motion.div
@@ -190,6 +321,105 @@ const Home = () => {
       </section>
 
       <main className="flex-grow">
+        {/* Quick Access Shortcuts */}
+        {isLoggedIn && (
+          <motion.section
+            className="py-8 bg-white"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+          >
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl font-bold text-[#006699] mb-6">
+                Quick Access
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link
+                  to="/profile"
+                  className="bg-[#F2F2F2] hover:bg-[#E6E6E6] p-6 rounded-lg shadow-md text-center transition-all duration-300 flex flex-col items-center"
+                >
+                  <svg
+                    className="w-10 h-10 mb-2 text-[#006699]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  <span className="font-medium">My Profile</span>
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-[#F2F2F2] hover:bg-[#E6E6E6] p-6 rounded-lg shadow-md text-center transition-all duration-300 flex flex-col items-center"
+                >
+                  <svg
+                    className="w-10 h-10 mb-2 text-[#006699]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                    />
+                  </svg>
+                  <span className="font-medium">Register for Event</span>
+                </Link>
+                <Link
+                  to="/events"
+                  className="bg-[#F2F2F2] hover:bg-[#E6E6E6] p-6 rounded-lg shadow-md text-center transition-all duration-300 flex flex-col items-center"
+                >
+                  <svg
+                    className="w-10 h-10 mb-2 text-[#006699]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span className="font-medium">Browse Events</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="bg-[#F2F2F2] hover:bg-[#E6E6E6] p-6 rounded-lg shadow-md text-center transition-all duration-300 flex flex-col items-center"
+                >
+                  <svg
+                    className="w-10 h-10 mb-2 text-[#006699]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
         {/* About Section */}
         <motion.section
           id="about"

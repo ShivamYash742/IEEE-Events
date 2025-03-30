@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Events = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
 
   // Mock data for events
@@ -112,6 +113,27 @@ const Events = () => {
             Connect with professionals and expand your knowledge.
           </p>
         </motion.div>
+
+        <div className="flex mb-8">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center bg-[#006699] text-white px-4 py-2 rounded-md hover:bg-[#00557A] transition-all duration-300"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Back to Home
+          </button>
+        </div>
 
         {/* Filter Controls */}
         <div className="mb-8 flex justify-center">
