@@ -1,63 +1,58 @@
-# IEEE Event Management Application
+# IEEE Task 1
 
-A React application for IEEE event registration and management.
+## MongoDB Setup Instructions
 
-## MongoDB Setup
+1. Install MongoDB Community Edition:
 
-This application uses MongoDB for data storage. The connection string is configured in the `.env` file:
+   - Download from: https://www.mongodb.com/try/download/community
+   - Choose the Windows x64 MSI installer
+   - Run the installer and follow the installation steps
 
-```
-VITE_MONGODB_URI=mongodb://localhost:27017/ieee_database
-```
+2. Start MongoDB:
 
-### Setting up MongoDB
+   - Open MongoDB Compass (installed with MongoDB)
+   - Connect using: `mongodb://localhost:27017`
+   - The database `ieee_database` will be created automatically when the application runs
 
-1. **Install MongoDB**: Download and install MongoDB from [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+3. Run the Application:
 
-2. **Start MongoDB**: Run MongoDB as a service or using the command line:
+   ```bash
+   # Install dependencies
+   npm install
 
-   ```
-   mongod --dbpath /path/to/data/directory
-   ```
-
-3. **Configure Connection**: Update the `.env` file with your MongoDB connection string if needed:
-   ```
-   VITE_MONGODB_URI=mongodb://username:password@host:port/ieee_database
-   ```
-
-For production environments, use a hosted MongoDB instance such as MongoDB Atlas.
-
-## Environment Variables
-
-The application uses the following environment variables (with Vite prefix):
-
-- `VITE_MONGODB_URI`: MongoDB connection string
-- `VITE_NODE_ENV`: Environment (development, production)
-- `VITE_PORT`: Server port number
-
-Vite requires all environment variables to be prefixed with `VITE_` to be accessible in the client-side code.
-
-## Using MongoDB in the Application
-
-Currently, the application uses a mock MongoDB service with localStorage for demonstration. To implement the real MongoDB connection:
-
-1. Install the required packages:
-
-   ```
-   npm install mongoose
+   # Start the development server
+   npm run dev
    ```
 
-2. Modify the `src/services/MongoDBService.js` file to use the actual MongoDB connection
+4. Database Structure:
+
+   - Database Name: `ieee_database`
+   - Collections:
+     - `users`: User information
+     - `registrations`: Event registrations
+     - `events`: Event details
+
+5. View Data:
+   - Open MongoDB Compass
+   - Connect to: `mongodb://localhost:27017`
+   - Select the `ieee_database` database
+   - Browse collections to view data
 
 ## Development
 
-1. Install dependencies:
+The application uses:
 
-   ```
-   npm install
-   ```
+- React + Vite
+- MongoDB with Mongoose
+- TailwindCSS for styling
+- Framer Motion for animations
 
-2. Start the development server:
-   ```
-   npm run dev
-   ```
+## Environment Variables
+
+Create a `.env` file in the root directory with:
+
+```
+VITE_MONGODB_URI=mongodb://localhost:27017/ieee_database
+VITE_NODE_ENV=development
+VITE_PORT=5000
+```

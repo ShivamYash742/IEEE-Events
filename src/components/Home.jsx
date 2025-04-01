@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import mongoDBService from "../services/MongoDBService";
+import dataService from "../services/MongoDBService";
 
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,37 +12,37 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if MongoDB connection is established
-    const initializeDB = async () => {
+    // Check if storage is initialized
+    const initializeStorage = async () => {
       setLoading(true);
       try {
-        // Initialize MongoDB connection
-        await mongoDBService.init();
+        // Initialize storage
+        await dataService.init();
 
-        // Check if user is logged in (from session storage for front-end)
+        // Check if user is logged in (from session storage)
         const currentUser = sessionStorage.getItem("currentUser");
         if (currentUser) {
           const userData = JSON.parse(currentUser);
-          // Verify user exists in MongoDB
-          const dbUser = await mongoDBService.getUserByEmail(userData.email);
+          // Verify user exists in storage
+          const dbUser = await dataService.getUserByEmail(userData.email);
           if (dbUser) {
             setIsLoggedIn(true);
             setUser(dbUser);
             // Update session with latest user data
             sessionStorage.setItem("currentUser", JSON.stringify(dbUser));
           } else {
-            // User doesn't exist in DB, clear session
+            // User doesn't exist in storage, clear session
             sessionStorage.removeItem("currentUser");
           }
         }
       } catch (error) {
-        console.error("Failed to initialize DB:", error);
+        console.error("Failed to initialize storage:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    initializeDB();
+    initializeStorage();
   }, []);
 
   const handleLogout = () => {

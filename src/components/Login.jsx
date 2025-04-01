@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import mongoDBService from "../services/MongoDBService";
+import dataService from "../services/MongoDBService";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,17 +14,17 @@ const Login = () => {
   const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
-    // Initialize MongoDB
-    const initMongoDB = async () => {
+    // Initialize storage
+    const initStorage = async () => {
       try {
-        await mongoDBService.init();
+        await dataService.init();
       } catch (error) {
-        console.error("Failed to initialize MongoDB:", error);
-        setLoginError("Database connection error. Please try again later.");
+        console.error("Failed to initialize storage:", error);
+        setLoginError("Storage initialization error. Please try again later.");
       }
     };
 
-    initMongoDB();
+    initStorage();
 
     // Check if already logged in
     const currentUser = sessionStorage.getItem("currentUser");
@@ -80,8 +80,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Fetch user from MongoDB service
-      const user = await mongoDBService.getUserByEmail(formData.email);
+      // Fetch user from storage service
+      const user = await dataService.getUserByEmail(formData.email);
 
       // Check if user exists and password matches
       if (user && user.password === formData.password) {

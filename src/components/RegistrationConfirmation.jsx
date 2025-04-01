@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import html2canvas from "html2canvas";
-import mongoDBService from "../services/MongoDBService";
+import dataService from "../services/MongoDBService";
 
 const RegistrationConfirmation = () => {
   const { registrationId } = useParams();
@@ -16,11 +16,11 @@ const RegistrationConfirmation = () => {
   useEffect(() => {
     const fetchRegistrationData = async () => {
       try {
-        // Initialize MongoDB
-        await mongoDBService.init();
+        // Initialize storage
+        await dataService.init();
 
         // Get registration details
-        const registrationData = await mongoDBService.getRegistrationById(
+        const registrationData = await dataService.getRegistrationById(
           registrationId
         );
         if (!registrationData) {
@@ -33,7 +33,7 @@ const RegistrationConfirmation = () => {
 
         // Get event details if eventId exists
         if (registrationData.eventId) {
-          const eventData = await mongoDBService.getEventById(
+          const eventData = await dataService.getEventById(
             registrationData.eventId
           );
           setEvent(eventData);
@@ -51,11 +51,11 @@ const RegistrationConfirmation = () => {
     if (!registrationId) {
       const createMockRegistration = async () => {
         try {
-          // Initialize MongoDB
-          await mongoDBService.init();
+          // Initialize storage
+          await dataService.init();
 
           // Create a mock registration
-          const mockRegistration = await mongoDBService.createRegistration({
+          const mockRegistration = await dataService.createRegistration({
             userId: "demo-user",
             eventId: "1", // Using the first event from our mock data
             firstName: "John",
@@ -67,7 +67,7 @@ const RegistrationConfirmation = () => {
           setRegistration(mockRegistration);
 
           // Get event details
-          const eventData = await mongoDBService.getEventById("1");
+          const eventData = await dataService.getEventById("1");
           setEvent(eventData);
 
           setLoading(false);
@@ -110,11 +110,11 @@ const RegistrationConfirmation = () => {
     return (
       <div className="min-h-screen bg-[#F2F2F2] pt-20 pb-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
-            <div className="text-center">
+          <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md text-center">
+            <div className="text-red-500 mb-4">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-16 w-16 mx-auto text-red-500"
+                className="h-12 w-12 mx-auto"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -126,15 +126,15 @@ const RegistrationConfirmation = () => {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h1 className="text-2xl font-bold text-gray-800 mt-4">Error</h1>
-              <p className="text-gray-600 mt-2">{error}</p>
-              <button
-                onClick={() => navigate("/register")}
-                className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#006699] hover:bg-[#00557A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#006699]"
-              >
-                Go to Registration
-              </button>
             </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Error</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Link
+              to="/events"
+              className="inline-block bg-[#006699] text-white px-6 py-3 rounded-md font-medium hover:bg-[#00557A] transition-colors duration-300"
+            >
+              Browse Events
+            </Link>
           </div>
         </div>
       </div>
@@ -266,71 +266,12 @@ const RegistrationConfirmation = () => {
               </button>
 
               <Link
-                to={event ? `/events/${event._id}` : "/events"}
+                to={event ? `/events/${event.id}` : "/events"}
                 className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#006699]"
               >
                 {event ? "View Event Details" : "Browse Events"}
               </Link>
-
-              <Link
-                to="/"
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#006699]"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                Back to Home
-              </Link>
             </div>
-          </div>
-
-          <div className="bg-blue-50 border-l-4 border-[#006699] p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-blue-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  A copy of this ticket has been sent to your email. You can
-                  also download it for offline access.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <p className="text-gray-600">
-              Thank you for registering with IEEE. If you have any questions,
-              please contact us at{" "}
-              <a
-                href="mailto:support@ieee.org"
-                className="text-[#006699] hover:underline"
-              >
-                support@ieee.org
-              </a>
-            </p>
           </div>
         </motion.div>
       </div>

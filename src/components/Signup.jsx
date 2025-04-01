@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import mongoDBService from "../services/MongoDBService";
+import dataService from "../services/MongoDBService";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -12,25 +12,25 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
     phone: "",
-    isIEEEMember: false,
-    ieeeNumber: "",
+    organization: "",
+    membershipType: "regular",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [signupError, setSignupError] = useState("");
 
   useEffect(() => {
-    // Initialize MongoDB
-    const initMongoDB = async () => {
+    // Initialize storage
+    const initStorage = async () => {
       try {
-        await mongoDBService.init();
+        await dataService.init();
       } catch (error) {
-        console.error("Failed to initialize MongoDB:", error);
-        setSignupError("Database connection error. Please try again later.");
+        console.error("Failed to initialize storage:", error);
+        setSignupError("Storage initialization error. Please try again later.");
       }
     };
 
-    initMongoDB();
+    initStorage();
 
     // Check if already logged in
     const currentUser = sessionStorage.getItem("currentUser");
@@ -85,10 +85,6 @@ const Signup = () => {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (formData.isIEEEMember && !formData.ieeeNumber) {
-      newErrors.ieeeNumber = "IEEE membership number is required";
-    }
-
     return newErrors;
   };
 
@@ -105,7 +101,7 @@ const Signup = () => {
 
     try {
       // Check if email already exists
-      const existingUser = await mongoDBService.getUserByEmail(formData.email);
+      const existingUser = await dataService.getUserByEmail(formData.email);
 
       if (existingUser) {
         setSignupError(
@@ -118,8 +114,8 @@ const Signup = () => {
       // Extract data to save (remove confirmPassword)
       const { confirmPassword, ...userData } = formData;
 
-      // Create user in MongoDB service
-      const newUser = await mongoDBService.createUser(userData);
+      // Create user in storage service
+      const newUser = await dataService.createUser(userData);
 
       if (newUser) {
         // Store user info in sessionStorage (without password)
@@ -172,7 +168,7 @@ const Signup = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="firstName" className="block text-gray-700 mb-1">
                   First Name
@@ -214,157 +210,127 @@ const Signup = () => {
                   </span>
                 )}
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className="block text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`border ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
-                placeholder="you@example.com"
-              />
-              {errors.email && (
-                <span className="text-red-500 text-sm mt-1 block">
-                  {errors.email}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-gray-700 mb-1">
-                Phone Number (optional)
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300"
-                placeholder="+1 (123) 456-7890"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`border ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <span className="text-red-500 text-sm mt-1 block">
-                  {errors.password}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-gray-700 mb-1"
-              >
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`border ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
-                placeholder="••••••••"
-              />
-              {errors.confirmPassword && (
-                <span className="text-red-500 text-sm mt-1 block">
-                  {errors.confirmPassword}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-4">
-              <div className="flex items-center">
-                <input
-                  id="isIEEEMember"
-                  name="isIEEEMember"
-                  type="checkbox"
-                  checked={formData.isIEEEMember}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-[#006699] focus:ring-[#006699] border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="isIEEEMember"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  I am an IEEE Member
+              <div>
+                <label htmlFor="email" className="block text-gray-700 mb-1">
+                  Email Address
                 </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`border ${
+                    errors.email ? "border-red-500" : "border-gray-300"
+                  } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
+                />
+                {errors.email && (
+                  <span className="text-red-500 text-sm mt-1 block">
+                    {errors.email}
+                  </span>
+                )}
               </div>
 
-              {formData.isIEEEMember && (
-                <div className="mt-3">
-                  <label
-                    htmlFor="ieeeNumber"
-                    className="block text-gray-700 mb-1"
-                  >
-                    IEEE Membership Number
-                  </label>
-                  <input
-                    type="text"
-                    id="ieeeNumber"
-                    name="ieeeNumber"
-                    value={formData.ieeeNumber}
-                    onChange={handleChange}
-                    className={`border ${
-                      errors.ieeeNumber ? "border-red-500" : "border-gray-300"
-                    } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
-                  />
-                  {errors.ieeeNumber && (
-                    <span className="text-red-500 text-sm mt-1 block">
-                      {errors.ieeeNumber}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+              <div>
+                <label htmlFor="phone" className="block text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300"
+                />
+              </div>
 
-            <div className="text-sm text-gray-600">
-              By creating an account, you agree to IEEE's{" "}
-              <a
-                href="https://www.ieee.org/about/help/security-privacy.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#006699] hover:underline"
-              >
-                Privacy Policy
-              </a>{" "}
-              and{" "}
-              <a
-                href="https://www.ieee.org/about/help/terms-conditions.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#006699] hover:underline"
-              >
-                Terms of Service
-              </a>
-              .
+              <div>
+                <label
+                  htmlFor="organization"
+                  className="block text-gray-700 mb-1"
+                >
+                  Organization/University
+                </label>
+                <input
+                  type="text"
+                  id="organization"
+                  name="organization"
+                  value={formData.organization}
+                  onChange={handleChange}
+                  className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="membershipType"
+                  className="block text-gray-700 mb-1"
+                >
+                  Membership Type
+                </label>
+                <select
+                  id="membershipType"
+                  name="membershipType"
+                  value={formData.membershipType}
+                  onChange={handleChange}
+                  className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300"
+                >
+                  <option value="regular">Regular Member</option>
+                  <option value="student">Student Member</option>
+                  <option value="associate">Associate Member</option>
+                  <option value="senior">Senior Member</option>
+                  <option value="fellow">Fellow</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`border ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
+                />
+                {errors.password && (
+                  <span className="text-red-500 text-sm mt-1 block">
+                    {errors.password}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-gray-700 mb-1"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`border ${
+                    errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-[#006699] transition-all duration-300`}
+                />
+                {errors.confirmPassword && (
+                  <span className="text-red-500 text-sm mt-1 block">
+                    {errors.confirmPassword}
+                  </span>
+                )}
+              </div>
             </div>
 
             <button
@@ -402,14 +368,40 @@ const Signup = () => {
                 "Create Account"
               )}
             </button>
+          </form>
 
-            <div className="text-center text-gray-600 mt-4">
+          <div className="mt-8 text-center">
+            <p className="text-gray-600">
               Already have an account?{" "}
-              <Link to="/login" className="text-[#006699] hover:underline">
+              <Link
+                to="/login"
+                className="text-[#006699] hover:underline font-medium"
+              >
                 Sign in
               </Link>
-            </div>
-          </form>
+            </p>
+          </div>
+
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center text-[#006699] hover:underline"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Back to Home
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>

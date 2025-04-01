@@ -13,8 +13,6 @@
     "@tailwindcss/vite": "^4.0.17",
     "framer-motion": "^12.6.2",
     "html2canvas": "^1.4.1",
-    "mongodb": "^6.15.0",
-    "mongoose": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.4.1",

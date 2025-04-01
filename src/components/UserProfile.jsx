@@ -7,27 +7,55 @@ function UserProfile() {
   const [user, setUser] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
+      setError(null);
       try {
-        // Initialize MongoDB
+        console.log("Initializing storage...");
+        // Initialize storage
         await mongoDBService.init();
 
         // Get the user from sessionStorage
-        const authUser = JSON.parse(sessionStorage.getItem("currentUser"));
-        if (!authUser) {
+        const authUserStr = sessionStorage.getItem("currentUser");
+        console.log("Auth user string from session:", authUserStr);
+
+        if (!authUserStr) {
+          console.log("No user in session, redirecting to login");
+          navigate("/login");
+          return;
+        }
+
+        let authUser;
+        try {
+          authUser = JSON.parse(authUserStr);
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+          sessionStorage.removeItem("currentUser");
+          navigate("/login");
+          return;
+        }
+
+        console.log("Auth user from session:", authUser);
+
+        if (!authUser || !authUser.email) {
+          console.log("Invalid user data in session");
+          sessionStorage.removeItem("currentUser");
           navigate("/login");
           return;
         }
 
         // Get full user details from the service
+        console.log("Fetching user details for email:", authUser.email);
         const userData = await mongoDBService.getUserByEmail(authUser.email);
+        console.log("User data from storage:", userData);
+
         if (!userData) {
-          // User not found in database
+          console.log("User not found in storage, clearing session");
           sessionStorage.removeItem("currentUser");
           navigate("/login");
           return;
@@ -35,23 +63,32 @@ function UserProfile() {
 
         setUser(userData);
 
-        // Get user registrations
-        if (userData) {
-          const userRegistrations =
-            await mongoDBService.getRegistrationsByUserId(userData._id);
+        // Get user registrations using the correct ID field
+        console.log("Fetching registrations for user:", userData.id);
+        const userRegistrations = await mongoDBService.getRegistrationsByUserId(
+          userData.id
+        );
+        console.log("User registrations:", userRegistrations);
 
-          // For each registration, get the event details
-          const registrationsWithEvents = await Promise.all(
-            userRegistrations.map(async (reg) => {
-              const event = await mongoDBService.getEventById(reg.eventId);
-              return { ...reg, event };
-            })
-          );
+        // For each registration, get the event details
+        const registrationsWithEvents = await Promise.all(
+          userRegistrations.map(async (reg) => {
+            if (!reg.eventId) {
+              console.warn("Registration missing eventId:", reg);
+              return null;
+            }
+            console.log("Fetching event details for registration:", reg.id);
+            const event = await mongoDBService.getEventById(reg.eventId);
+            console.log("Event details:", event);
+            return { ...reg, event };
+          })
+        );
 
-          setRegistrations(registrationsWithEvents);
-        }
+        // Filter out any null registrations
+        setRegistrations(registrationsWithEvents.filter((reg) => reg !== null));
       } catch (error) {
         console.error("Error fetching user data:", error);
+        setError("Failed to load profile data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -251,7 +288,7 @@ function UserProfile() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {registrations.map((reg) => (
-                      <tr key={reg._id}>
+                      <tr key={reg.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {reg.event?.title || "Unknown Event"}
@@ -269,7 +306,7 @@ function UserProfile() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
-                            onClick={() => handleViewRegistration(reg._id)}
+                            onClick={() => handleViewRegistration(reg.id)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             View Ticket
