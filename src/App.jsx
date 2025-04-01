@@ -7,7 +7,6 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import UserProfile from "./components/UserProfile";
 import RegistrationConfirmation from "./components/RegistrationConfirmation";
-import "./App.css";
 
 function App() {
   return (
