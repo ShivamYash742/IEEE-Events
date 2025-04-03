@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import html2canvas from "html2canvas";
 import dataService from "../services/MongoDBService";
 
+// Component that shows event registration confirmation and ticket
 const RegistrationConfirmation = () => {
   const { registrationId } = useParams();
   const navigate = useNavigate();
+  // State for storing data and UI status
   const [registrationData, setRegistrationData] = useState(null);
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +23,7 @@ const RegistrationConfirmation = () => {
         console.log("Initializing storage...");
         await dataService.init();
 
+        // Get registration details by ID
         console.log("Fetching registration data for ID:", registrationId);
         const registration = await dataService.getRegistrationById(
           registrationId
@@ -34,7 +37,7 @@ const RegistrationConfirmation = () => {
 
         setRegistrationData(registration);
 
-        // Fetch event details
+        // Get associated event details
         console.log("Fetching event details for ID:", registration.eventId);
         const event = await dataService.getEventById(registration.eventId);
         console.log("Event data:", event);
@@ -56,6 +59,7 @@ const RegistrationConfirmation = () => {
     fetchRegistrationData();
   }, [registrationId]);
 
+  // Handle ticket download as PNG image
   const handleDownloadTicket = async () => {
     if (!ticketRef.current) {
       console.error("Ticket reference not found");
@@ -65,7 +69,7 @@ const RegistrationConfirmation = () => {
     try {
       console.log("Starting ticket download process...");
 
-      // Create a canvas from the ticket HTML with better quality settings
+      // Create high-quality canvas from ticket element
       const canvas = await html2canvas(ticketRef.current, {
         scale: 2, // Higher quality
         useCORS: true,
@@ -74,7 +78,7 @@ const RegistrationConfirmation = () => {
         width: ticketRef.current.offsetWidth,
         height: ticketRef.current.offsetHeight,
         onclone: (clonedDoc) => {
-          // Ensure the cloned element has the correct dimensions
+          // Preserve dimensions in cloned element
           const clonedElement = clonedDoc.querySelector(
             "[data-ticket-content]"
           );
@@ -87,20 +91,20 @@ const RegistrationConfirmation = () => {
 
       console.log("Canvas created successfully");
 
-      // Convert canvas to blob with maximum quality
+      // Convert to PNG blob
       const blob = await new Promise((resolve) => {
         canvas.toBlob(resolve, "image/png", 1.0);
       });
 
       console.log("Blob created successfully");
 
-      // Create download link
+      // Set up download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `ticket-${registrationData.ticketNumber}.png`;
 
-      // Append to body, click, and cleanup
+      // Trigger download and clean up
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -113,6 +117,7 @@ const RegistrationConfirmation = () => {
     }
   };
 
+  // Show loading spinner while fetching data
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F2F2F2] pt-20 pb-16 flex justify-center items-center">
@@ -124,6 +129,7 @@ const RegistrationConfirmation = () => {
     );
   }
 
+  // Show error message if fetch failed
   if (error) {
     return (
       <div className="min-h-screen bg-[#F2F2F2] pt-20 pb-16">
@@ -159,6 +165,7 @@ const RegistrationConfirmation = () => {
     );
   }
 
+  // Main confirmation content with ticket
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -187,6 +194,7 @@ const RegistrationConfirmation = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6">
+              {/* Confirmation header */}
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   Registration Confirmed!
@@ -207,7 +215,7 @@ const RegistrationConfirmation = () => {
                   </p>
                 </div>
 
-                {/* Ticket HTML */}
+                {/* Ticket element (converted to image for download) */}
                 <div
                   ref={ticketRef}
                   data-ticket-content
@@ -267,7 +275,7 @@ const RegistrationConfirmation = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Navigation buttons */}
               <div className="flex justify-center space-x-4">
                 <Link
                   to="/events"

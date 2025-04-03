@@ -1,14 +1,15 @@
+// Service for local storage data management
 class StorageService {
   constructor() {
     this.isInitialized = false;
   }
 
-  // Initialize storage
+  // Initialize storage with sample data
   async init() {
     if (this.isInitialized) return;
 
     try {
-      // Initialize sample events if needed
+      // Create sample events if none exist
       await this._createSampleEvents();
       this.isInitialized = true;
       console.log("Storage initialized successfully");
@@ -18,7 +19,7 @@ class StorageService {
     }
   }
 
-  // User operations
+  // User CRUD operations
   async createUser(userData) {
     await this.init();
     const users = this._getUsers();
@@ -82,6 +83,7 @@ class StorageService {
   async createRegistration(registrationData) {
     await this.init();
     const registrations = this._getRegistrations();
+    // Generate random ticket number and QR code
     const ticketNumber = `IEEE-${Math.floor(Math.random() * 10000)
       .toString()
       .padStart(4, "0")}`;
@@ -112,7 +114,7 @@ class StorageService {
     return registrations.find((reg) => reg.id === registrationId) || null;
   }
 
-  // Private helper methods
+  // Private helper methods for localStorage access
   _getUsers() {
     const users = localStorage.getItem("users");
     return users ? JSON.parse(users) : [];
@@ -140,6 +142,7 @@ class StorageService {
     localStorage.setItem("registrations", JSON.stringify(registrations));
   }
 
+  // Create sample event data for demo
   async _createSampleEvents() {
     const events = this._getEvents();
     if (events.length === 0) {
@@ -182,7 +185,7 @@ class StorageService {
     }
   }
 
-  // Method to initialize storage
+  // Test storage connection
   async connectToStorage() {
     await this.init();
     return true;

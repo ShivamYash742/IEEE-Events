@@ -8,16 +8,24 @@ import Signup from "./components/Signup";
 import UserProfile from "./components/UserProfile";
 import RegistrationConfirmation from "./components/RegistrationConfirmation";
 
+// Main app component with routing configuration
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Main public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/events" element={<Events />} />
-        <Route path="/register" element={<Register />} />
+
+        {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        {/* User routes */}
+        <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<UserProfile />} />
+
+        {/* Registration confirmation routes */}
         <Route
           path="/registration-confirmation/:registrationId"
           element={<RegistrationConfirmation />}

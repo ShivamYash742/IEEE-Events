@@ -1,12 +1,13 @@
 // Local Storage Service
 import storageService from "./StorageService";
 
+// Service for handling data operations via Storage Service
 class DataService {
   constructor() {
     this.isInitialized = false;
   }
 
-  // Initialize storage
+  // Initialize storage connection
   async init() {
     if (this.isInitialized) return;
 
@@ -62,7 +63,7 @@ class DataService {
     return storageService.getRegistrationById(registrationId);
   }
 
-  // Method to initialize storage
+  // Test connection to storage
   async connectToStorage() {
     await this.init();
     return true;
